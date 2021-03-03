@@ -47,6 +47,43 @@ def builtin_norm_2(x):
     return np.linalg.norm(x, 2)
 
 
+def builtin_norm_wrms(x, y, ynew, atol, rtol):
+    import numpy as np
+    if np.isscalar(x):
+        return abs(x)
+    # Use y to calculate weights.
+    w = np.zeros(len(y))
+    for i in range(len(y)):
+        if np.isscalar(rtol):
+            w[i] = 1.0/(rtol*abs(ynew[i]) + atol)
+            # Only apply absolute tolerance to species mass fractions
+            # above a certain threshold:
+            #if abs(ynew[i]) > 0.01:
+            #    w[i] = 1.0/(rtol*abs(ynew[i]) + atol)
+            #else:
+            #    w[i] = 1.0/(rtol*abs(ynew[i]))
+            #w[i] = 1.0/(rtol*max(abs(y[i]), abs(ynew[i])) + atol)
+            # Put in a stop gap for zero species when only relative
+            # tolerances are used.
+            #if ynew[i] == 0 and atol == 0:
+            #    w[i] = 1.0/(1e-8)
+        else:
+            if rtol[i] != rtol[i] or np.isposinf(abs(rtol[i])):
+                rtol[i] = 0
+            w[i] = 1.0/(rtol[i]*abs(ynew[i]) + atol)
+            #w[i] = 1.0/(rtol*max(abs(y[i]), abs(ynew[i])) + atol)
+            # Put in a stop gap for zero species when only relative
+            # tolerances are used.
+            #if ynew[i] == 0 and atol == 0:
+            #    w[i] = 1.0/(1e-8)
+    # now calculate the wrms norm, as in CVODE.
+    add = 0
+    for i in range(len(x)):
+        add += (w[i]*x[i])**2
+
+    return np.sqrt(add/len(y))
+
+
 def builtin_norm_inf(x):
     import numpy as np
     if np.isscalar(x):
@@ -139,6 +176,7 @@ builtins = {
         "<builtin>isnan": builtin_isnan,
         "<builtin>norm_1": builtin_norm_1,
         "<builtin>norm_2": builtin_norm_2,
+        "<builtin>norm_wrms": builtin_norm_wrms,
         "<builtin>norm_inf": builtin_norm_inf,
         "<builtin>dot_product": builtin_dot_product,
         "<builtin>array": builtin_array,

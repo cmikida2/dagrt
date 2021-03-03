@@ -293,6 +293,27 @@ class Norm2(_NormBase):
     identifier = "<builtin>norm_2"
 
 
+class NormWRMS(_NormBase):
+    """``norm_wrms(x)`` returns the wrms-norm of *x*.
+    *x* is a user type or array, and *y* is also a user type
+    or array.
+    """
+    identifier = "<builtin>norm_wrms"
+    arg_names = ("x", "y", "ynew", "atol", "rtol")
+    default_dict = {}
+
+    def get_result_kinds(self, arg_kinds, check):
+        x_kind, y_kind, atol_kind, rtol_kind = self.resolve_args(arg_kinds)
+
+        if check and not isinstance(x_kind, (NoneType, Array, UserType)):
+            raise TypeError("argument 'x' of 'norm' is not a user type")
+
+        if check and not isinstance(y_kind, (NoneType, Array, UserType)):
+            raise TypeError("argument 'y' of 'norm' is not a user type")
+
+        return (Scalar(is_real_valued=True),)
+
+
 class NormInf(_NormBase):
     """``norm_inf(x)`` returns the infinity-norm of *x*.
     *x* is a user type or array.
@@ -538,6 +559,7 @@ def _make_bfr():
     for func, py_pattern in [
             (Norm1(), "self._builtin_norm_1({args})"),
             (Norm2(), "self._builtin_norm_2({args})"),
+            (NormWRMS(), "self._builtin_norm_wrms({args})"),
             (NormInf(), "self._builtin_norm_inf({args})"),
             (DotProduct(), "{numpy}.vdot({args})"),
             (Len(), "{numpy}.size({args})"),
