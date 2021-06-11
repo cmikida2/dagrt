@@ -2699,9 +2699,10 @@ def codegen_builtin_len(results, function, args, arg_kinds,
 class AbsComputer(TypeVisitorWithResult):
     def visit_BuiltinType(self, fortran_type, fortran_expr_str, index_expr_map):
         self.code_generator.emit(
-                "{result} = abs({result})"
+                "{result} = abs({expr})"
                 .format(
-                    result=self.result_expr))
+                    result=self.result_expr,
+                    expr=fortran_expr_str))
 
 
 def codegen_builtin_elementwise_abs(results, function, args, arg_kinds,
